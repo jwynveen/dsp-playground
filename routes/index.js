@@ -4,6 +4,7 @@ var fs = require('fs');
 var parse = require('csv-parse');
 var async = require('async');
 var dataDirectory = './public/data/';
+var MatLabUtil = require('../MatLabUtil.js');
 
 router.get('/', function (req, res) {
   fs.readdir(dataDirectory, function (err, files) {
@@ -83,76 +84,15 @@ router.post('/', function (req, res) {
     function processData(options, callback) {
       if (options.data && options.data.length) {
         // TODO: Other processing goes here
-        var dataset = options.data[0];
 
-        // === Mean ===
-        if (options.mean || options.stddev1 || options.stddev2) {
-          var mean = dataset.y.reduce(function (sum, value) {
-              return sum + value;
-            }, 0) / dataset.y.length;
-
-          if (options.mean) {
-            options.data.push({
-              name: 'Mean',
-              x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
-              y: [mean, mean],
-              line: {
-                dash: 'dash',
-                width: 1,
-                color: '#D62728'
-              }
-            });
-          }
-          if (options.stddev1 || options.stddev2) {
-            var sd = dataset.y.reduce(function (sum, value) {
-              return sum + Math.pow(value - mean, 2);
-            }, 0) / dataset.y.length;
-
-            if (options.stddev1) {
-              options.data.push({
-                name: '+1 SD',
-                x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
-                y: [mean + sd, mean + sd],
-                line: {
-                  dash: 'dash',
-                  width: 1,
-                  color: '#FF7F0E'
-                }
-              });
-              options.data.push({
-                name: '-1 SD',
-                x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
-                y: [mean - sd, mean - sd],
-                line: {
-                  dash: 'dash',
-                  width: 1,
-                  color: '#FF7F0E'
-                }
-              });
-            }
-            if (options.stddev2) {
-              options.data.push({
-                name: '+2 SD',
-                x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
-                y: [mean + (sd * 2), mean + (sd * 2)],
-                line: {
-                  dash: 'dash',
-                  width: 1,
-                  color: '#8C564B'
-                }
-              });
-              options.data.push({
-                name: '-2 SD',
-                x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
-                y: [mean - (sd * 2), mean - (sd * 2)],
-                line: {
-                  dash: 'dash',
-                  width: 1,
-                  color: '#8C564B'
-                }
-              });
-            }
-          }
+        // === Mean / Standard Deviation ===
+        calculateMeanStdDev(options);
+        options.workingData = options.data[0].y.slice();  // clone the y array so we don't edit the original
+        if (options.filter1) {
+          filter(options, 'filter1');
+        }
+        if (options.filter2) {
+          filter(options, 'filter2');
         }
         options.dataString = JSON.stringify(options.data);
       }
@@ -170,13 +110,116 @@ router.post('/', function (req, res) {
     return res.render('index', options);
   });
 });
-/*router.post('/process', function (req, res) {
-  return res.json({
-    ok: true,
-    result: [{
-      x: [1, 2, 3, 4, 5],
-      y: [1, 2, 4, 8, 16]
-    }]
-  });
-});*/
+
 module.exports = router;
+
+function calculateMeanStdDev(options) {
+
+  var dataset = options.data[0];
+  if (options.mean || options.stddev1 || options.stddev2) {
+    var mean = dataset.y.reduce(function (sum, value) {
+        return sum + value;
+      }, 0) / dataset.y.length;
+
+    if (options.mean) {
+      options.data.push({
+        name: 'Mean',
+        x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
+        y: [mean, mean],
+        line: {
+          dash: 'dash',
+          width: 1,
+          color: '#D62728'
+        }
+      });
+    }
+    if (options.stddev1 || options.stddev2) {
+      var sd = dataset.y.reduce(function (sum, value) {
+          return sum + Math.pow(value - mean, 2);
+        }, 0) / dataset.y.length;
+
+      if (options.stddev1) {
+        options.data.push({
+          name: '+1 SD',
+          x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
+          y: [mean + sd, mean + sd],
+          line: {
+            dash: 'dash',
+            width: 1,
+            color: '#FF7F0E'
+          }
+        });
+        options.data.push({
+          name: '-1 SD',
+          x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
+          y: [mean - sd, mean - sd],
+          line: {
+            dash: 'dash',
+            width: 1,
+            color: '#FF7F0E'
+          }
+        });
+      }
+      if (options.stddev2) {
+        options.data.push({
+          name: '+2 SD',
+          x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
+          y: [mean + (sd * 2), mean + (sd * 2)],
+          line: {
+            dash: 'dash',
+            width: 1,
+            color: '#8C564B'
+          }
+        });
+        options.data.push({
+          name: '-2 SD',
+          x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
+          y: [mean - (sd * 2), mean - (sd * 2)],
+          line: {
+            dash: 'dash',
+            width: 1,
+            color: '#8C564B'
+          }
+        });
+      }
+    }
+  }
+  return options;
+}
+
+function filter(options, filterId) {
+
+  switch (options[filterId]) {
+    case 'matlab_lowpass':
+      matlabFilter(options, 'lowpass', filterId);
+      break;
+    case 'matlab_highpass':
+      matlabFilter(options, 'highpass', filterId);
+      break;
+    case 'matlab_highpass_abs':
+      matlabFilter(options, 'highpass', filterId, true);
+      break;
+    default:
+      break;
+  }
+}
+function matlabFilter(options, type, filterId, absValue) {
+  var cutoff = options[filterId + '_cutoff'];
+  var hidden = options[filterId + '_hidden'];
+
+  var coeffs = MatLabUtil.calculateCoeffs(1, cutoff, 30, type);
+  options.workingData = MatLabUtil.filtfilt(coeffs.b, coeffs.a, options.workingData);
+  if (absValue) {
+    options.workingData = options.workingData.map(function (mag) {
+      return Math.abs(mag);
+    });
+  }
+
+  options.data.push({
+    name: 'Filter - Matlab ' + type,
+    x: options.data[0].x,
+    y: options.workingData,
+    visible: hidden ? 'legendonly' : true
+  });
+  //return filtered;
+}

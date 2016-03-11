@@ -73,6 +73,53 @@
             </label>
           </div>
         </fieldset>
+
+        <fieldset>
+          <legend>Filters</legend>
+          <div class="form-group">
+            <label class="control-label">Filter 1</label>
+            <select class="form-control" name="filter1" id="filter1" data-value="{{filter1}}">
+              <option value="">None</option>
+              <optgroup label="Matlab">
+                <option value="matlab_lowpass">Low-pass</option>
+                <option value="matlab_highpass">High-pass</option>
+                <option value="matlab_highpass_abs">High-pass (w/ absolute value)</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="control-label">Cutoff</label>
+            <input type="text" name="filter1_cutoff" id="filter1_cutoff" value="{{filter1_cutoff}}" />
+          </div>
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" name="filter1_hidden" id="filter1_hidden" value="true" {{#filter1_hidden}}checked{{/filter1_hidden}} />
+              Hidden
+            </label>
+          </div>
+          <hr/>
+          <div class="form-group">
+            <label class="control-label">Filter 2</label>
+            <select class="form-control" name="filter2" id="filter2" data-value="{{filter2}}">
+              <option value="">None</option>
+              <optgroup label="Matlab">
+                <option value="matlab_lowpass">Low-pass</option>
+                <option value="matlab_highpass">High-pass</option>
+                <option value="matlab_highpass_abs">High-pass (w/ absolute value)</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="control-label">Cutoff</label>
+            <input type="text" name="filter2_cutoff" id="filter2_cutoff" value="{{filter2_cutoff}}" />
+          </div>
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" name="filter2_hidden" id="filter2_hidden" value="true" {{#filter2_hidden}}checked{{/filter2_hidden}} />
+              Hidden
+            </label>
+          </div>
+        </fieldset>
       </form>
     </div>
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
