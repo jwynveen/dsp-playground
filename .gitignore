@@ -39,3 +39,4 @@ npm-debug.log
 .idea
 .node_history
 .sass-cache
+public/data/*

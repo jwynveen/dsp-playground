@@ -27,33 +27,29 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-sm-3 col-md-2 sidebar">
-      <form class="form-horizontal" action="/" method="post">
+      <form action="/" method="post">
         <fieldset>
           <legend>File</legend>
           <div class="form-group">
-            <input type="file" name="file" id="file" />
+            <label class="control-label sr-only">File</label>
+            <select class="form-control" name="datafile" id="datafile" required>
+              <option value="">Select File</option>
+              {{#files}}
+                <option value="{{.}}">{{.}}</option>
+              {{/files}}
+            </select>
           </div>
-          {{#dataFile}}
-            <div class="form-group">
-              <label class="control-label col-xs-2">X</label>
-              <div class="col-xs-10">
-                <select class="form-control" name="xCol" id="xCol" required>
-                  <option value="">Select X</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="control-label col-xs-2">Y</label>
-              <div class="col-xs-10">
-                <select class="form-control" name="yCol" id="yCol" required>
-                  <option value="">Select Y</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <button type="submit" class="btn btn-primary pull-right">Generate</button>
-            </div>
-          {{/dataFile}}
+          <div class="form-group">
+            <label class="control-label col-xs- 2">X Column Name</label>
+            <input type="text" class="form-control" name="xCol" id="xCol" value="{{xCol}}" required/>
+          </div>
+          <div class="form-group">
+            <label class="control-label">Y Column Name</label>
+            <input type="text" class="form-control" name="yCol" id="yCol" value="{{yCol}}" required/>
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary pull-right">Generate</button>
+          </div>
         </fieldset>
 
         <fieldset>
@@ -80,7 +76,8 @@
       </form>
     </div>
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-      <div id="chart"></div>
+      {{#errorMessage}}<p class="alert alert-danger">{{errorMessage}}</p>{{/errorMessage}}
+      <div id="chart" data-values="{{dataString}}"></div>
     </div>
   </div>
 </div>
