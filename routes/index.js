@@ -27,31 +27,25 @@ router.get('/', function (req, res) {
 });
 router.post('/', function (req, res) {
   async.waterfall([
-    function getFileList(callback) {
-
+    function initWaterfall(callback) {
+      return callback(null, req.body);
+    },
+    function getFileList(options, callback) {
       fs.readdir(dataDirectory, function (err, files) {
-        var options = {
-          files: files.map(function (file) {
-            return {
-              value: file,
-              text: file,
-              selected: file === req.body.datafile
-            };
-          })
-        };
+        options.files = files.map(function (file) {
+          return {
+            value: file,
+            text: file,
+            selected: file === req.body.datafile
+          };
+        });
         return callback(err, options);
       });
     },
-    function getParams(options, callback) {
-      options.datafile = req.body.datafile;
-      options.xCol = req.body.xCol || 'time';
-      options.yCol = req.body.yCol || 'accMag';
+    function getData(options, callback) {
       if (!options.datafile) {
         return callback('Must select a file', options);
       }
-      return callback(null, options);
-    },
-    function getData(options, callback) {
       fs.readFile(dataDirectory + options.datafile, function (err, csvSourceFile) {
         if (err) {
           return callback(err);
@@ -75,8 +69,8 @@ router.post('/', function (req, res) {
           output.splice(0, 1);  // Delete header row
           try {
             options.data = [output.reduce(function (data, row) {
-              data.x.push(row[xIdx]);
-              data.y.push(row[yIdx]);
+              data.x.push(Number(row[xIdx]));
+              data.y.push(Number(row[yIdx]));
               return data;
             }, {x: [], y: [], name: 'Original'})];
             return callback(null, options);
@@ -89,7 +83,77 @@ router.post('/', function (req, res) {
     function processData(options, callback) {
       if (options.data && options.data.length) {
         // TODO: Other processing goes here
+        var dataset = options.data[0];
 
+        // === Mean ===
+        if (options.mean || options.stddev1 || options.stddev2) {
+          var mean = dataset.y.reduce(function (sum, value) {
+              return sum + value;
+            }, 0) / dataset.y.length;
+
+          if (options.mean) {
+            options.data.push({
+              name: 'Mean',
+              x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
+              y: [mean, mean],
+              line: {
+                dash: 'dash',
+                width: 1,
+                color: '#D62728'
+              }
+            });
+          }
+          if (options.stddev1 || options.stddev2) {
+            var sd = dataset.y.reduce(function (sum, value) {
+              return sum + Math.pow(value - mean, 2);
+            }, 0) / dataset.y.length;
+
+            if (options.stddev1) {
+              options.data.push({
+                name: '+1 SD',
+                x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
+                y: [mean + sd, mean + sd],
+                line: {
+                  dash: 'dash',
+                  width: 1,
+                  color: '#FF7F0E'
+                }
+              });
+              options.data.push({
+                name: '-1 SD',
+                x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
+                y: [mean - sd, mean - sd],
+                line: {
+                  dash: 'dash',
+                  width: 1,
+                  color: '#FF7F0E'
+                }
+              });
+            }
+            if (options.stddev2) {
+              options.data.push({
+                name: '+2 SD',
+                x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
+                y: [mean + (sd * 2), mean + (sd * 2)],
+                line: {
+                  dash: 'dash',
+                  width: 1,
+                  color: '#8C564B'
+                }
+              });
+              options.data.push({
+                name: '-2 SD',
+                x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
+                y: [mean - (sd * 2), mean - (sd * 2)],
+                line: {
+                  dash: 'dash',
+                  width: 1,
+                  color: '#8C564B'
+                }
+              });
+            }
+          }
+        }
         options.dataString = JSON.stringify(options.data);
       }
       return callback(null, options);

@@ -56,19 +56,19 @@
           <legend>Basics</legend>
           <div class="checkbox">
             <label>
-              <input type="checkbox" name="mean" id="mean" value="true" />
+              <input type="checkbox" name="mean" id="mean" value="true" {{#mean}}checked{{/mean}} />
               Mean
             </label>
           </div>
           <div class="checkbox">
             <label>
-              <input type="checkbox" name="stddev1" id="stddev1" value="true" />
+              <input type="checkbox" name="stddev1" id="stddev1" value="true" {{#stddev1}}checked{{/stddev1}} />
               Standard Deviation (&pm;1)
             </label>
           </div>
           <div class="checkbox">
             <label>
-              <input type="checkbox" name="stddev2" id="stddev2" value="true" />
+              <input type="checkbox" name="stddev2" id="stddev2" value="true" {{#stddev2}}checked{{/stddev2}} />
               Standard Deviation (&pm;2)
             </label>
           </div>
