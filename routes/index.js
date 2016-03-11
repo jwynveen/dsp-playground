@@ -121,11 +121,15 @@ function calculateMeanStdDev(options) {
         return sum + value;
       }, 0) / dataset.y.length;
 
+    var xValues = dataset.x.slice(0, 20).concat(dataset.x[dataset.x.length - 1]);
+    var yValues = Array.apply(null, Array(21));
     if (options.mean) {
       options.data.push({
         name: 'Mean',
-        x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
-        y: [mean, mean],
+        x: xValues,
+        y: yValues.map(function () {
+          return mean;
+        }),
         line: {
           dash: 'dash',
           width: 1,
@@ -141,8 +145,10 @@ function calculateMeanStdDev(options) {
       if (options.stddev1) {
         options.data.push({
           name: '+1 SD',
-          x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
-          y: [mean + sd, mean + sd],
+          x: xValues,
+          y: yValues.map(function () {
+            return mean + sd;
+          }),
           line: {
             dash: 'dash',
             width: 1,
@@ -151,8 +157,10 @@ function calculateMeanStdDev(options) {
         });
         options.data.push({
           name: '-1 SD',
-          x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
-          y: [mean - sd, mean - sd],
+          x: xValues,
+          y: yValues.map(function () {
+            return mean - sd;
+          }),
           line: {
             dash: 'dash',
             width: 1,
@@ -163,8 +171,10 @@ function calculateMeanStdDev(options) {
       if (options.stddev2) {
         options.data.push({
           name: '+2 SD',
-          x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
-          y: [mean + (sd * 2), mean + (sd * 2)],
+          x: xValues,
+          y: yValues.map(function () {
+            return mean + (sd * 2);
+          }),
           line: {
             dash: 'dash',
             width: 1,
@@ -173,8 +183,10 @@ function calculateMeanStdDev(options) {
         });
         options.data.push({
           name: '-2 SD',
-          x: [dataset.x[0], dataset.x[dataset.x.length - 1]],
-          y: [mean - (sd * 2), mean - (sd * 2)],
+          x: xValues,
+          y: yValues.map(function () {
+            return mean - (sd * 2);
+          }),
           line: {
             dash: 'dash',
             width: 1,
