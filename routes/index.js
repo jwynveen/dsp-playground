@@ -12,7 +12,13 @@ router.get('/', function (req, res) {
     }
 
     var model = {
-      files: files,
+      files: files.map(function (file) {
+        return {
+          value: file,
+          text: file,
+          selected: file === req.body.datafile
+        };
+      }),
       xCol: 'time',
       yCol: 'accMag'
     };
@@ -24,7 +30,16 @@ router.post('/', function (req, res) {
     function getFileList(callback) {
 
       fs.readdir(dataDirectory, function (err, files) {
-        return callback(err, {files: files});
+        var options = {
+          files: files.map(function (file) {
+            return {
+              value: file,
+              text: file,
+              selected: file === req.body.datafile
+            };
+          })
+        };
+        return callback(err, options);
       });
     },
     function getParams(options, callback) {
